@@ -1,11 +1,22 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // Hide the loader once the content is fully loaded
-    const loader = document.getElementById("loader");
+document.addEventListener("DOMContentLoaded", () => {
+  const loader = document.getElementById("loader");
+  if (loader) {
     loader.classList.add("hidden");
+  }
 });
 
-window.addEventListener("beforeunload", function () {
-    // Show the loader when the page is unloading
-    const loader = document.getElementById("loader");
+// Ensuring the loader is hidden when navigating back to the page
+window.addEventListener("pageshow", () => {
+  const loader = document.getElementById("loader");
+  if (loader) {
+    loader.classList.add("hidden");
+  }
+});
+
+// Show the loader when navigating away
+window.addEventListener("beforeunload", () => {
+  const loader = document.getElementById("loader");
+  if (loader) {
     loader.classList.remove("hidden");
+  }
 });
