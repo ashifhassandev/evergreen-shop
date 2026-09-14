@@ -1,15 +1,13 @@
 const passport = require("passport");
 const crypto = require("crypto");
 const googleStrategy = require("passport-google-oauth20").Strategy;
-const facebookStrategy = require("passport-facebook");
+// const facebookStrategy = require("passport-facebook");
 const User = require("../models/user");
-const { generateReferralCode } = require("../utils/referralUtils");
+const { generateUniqueReferralCode } = require("../utils/referralUtils");
 
 // Function to generate a temporary 8-character alphanumeric password
-function generateTemporaryPassword() {
-  const temporaryPassword = crypto.randomBytes(4).toString("hex").toUpperCase();
-  return temporaryPassword;
-}
+const generateTemporaryPassword = () =>
+  crypto.randomBytes(4).toString("hex").toUpperCase();
 
 // Google OAuth 2.0 strategy setup
 passport.use(
@@ -17,7 +15,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "https://theevergreen.shop/users/auth/google/callback",
+      callbackURL:
+        process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
     },
     async (accessToken, refreshToken, profile, cb) => {
       try {
@@ -41,7 +40,7 @@ passport.use(
             });
 
             const savedUser = await user.save();
-            const generatedReferralCode = generateReferralCode(savedUser._id);
+            const generatedReferralCode = await generateUniqueReferralCode();
             savedUser.referralCode = generatedReferralCode;
             await savedUser.save();
           }
@@ -51,8 +50,8 @@ passport.use(
       } catch (err) {
         cb(err, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 // Serialize user for session
