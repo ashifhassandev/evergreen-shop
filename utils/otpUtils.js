@@ -4,11 +4,9 @@ const OTP = require("../models/otp");
 const transporter = require("../config/email");
 
 // Generate a 6-digit random OTP
-const generateOtp = () => {
-  return crypto.randomInt(100000, 999999).toString();
-};
+const generateOtp = () => crypto.randomInt(100000, 999999).toString();
 
-// Store the OTP in the database with an expiration time of 1 minute
+// Store the OTP in the database with an expiration time of 2 minute
 const storeOtp = async (email, otp) => {
   await OTP.deleteMany({ email });
 
@@ -41,7 +39,7 @@ const sendOtp = async (email, otp) => {
 const verifyOtp = async (email, userOtp) => {
   const latestOtpDoc = await OTP.findOneAndDelete({
     email,
-    expiresAt: { $gte: new Date() }, // Ensure the OTP is not expired
+    expiresAt: { $gte: new Date() },
   })
     .sort({ expiresAt: -1 })
     .exec();
@@ -67,11 +65,15 @@ const cleanupExpiredOtps = async () => {
   const now = new Date();
 
   try {
-    await OTP.deleteMany({ expiresAt: { $lte: now } });
-    console.log("Expired OTPs cleaned up successfully.");
+    const result = await OTP.deleteMany({
+      expiresAt: { $lte: now },
+    });
+
+    console.log(
+      `Expired OTPs cleaned up. Deleted ${result.deletedCount} OTP(s).`,
+    );
   } catch (err) {
-    console.error("Error cleaning up expired OTPs: ", err);
-    throw new Error("An error occurred. Please try again later.");
+    console.error("Error cleaning up expired OTPs:", err);
   }
 };
 

@@ -19,8 +19,6 @@ const handleSendOtp = async (req, res) => {
     await cleanupExpiredOtps();
 
     const otp = generateOtp();
-    console.log(otp);
-
     await storeOtp(email, otp);
     await sendOtp(email, otp);
 
@@ -75,8 +73,13 @@ const handleVerifyOtp = async (req, res) => {
         redirectUrl,
       });
     } else {
-      const message = result.reason === "expired" ? "The OTP has expired." : "The OTP is invalid.";
-      return res.status(HttpStatus.BAD_REQUEST).json({ success: false, message });
+      const message =
+        result.reason === "expired"
+          ? "The OTP has expired."
+          : "The OTP is invalid.";
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ success: false, message });
     }
   } catch (error) {
     console.error("Error verifying OTP: ", error);

@@ -46,6 +46,7 @@
     "paypal-rest-sdk": "^1.8.1",
     "pdfkit": "^0.15.0",
     "razorpay": "^2.9.4",
+    "resend": "^6.28.0",
     "sharp": "^0.33.5"
   },
   "devDependencies": {
