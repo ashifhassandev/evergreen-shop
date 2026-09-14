@@ -3,8 +3,6 @@ require('dotenv').config();
 
 // Import custom modules
 const connectDB = require('./config/db');
-
-// Connect to MongoDB
 connectDB();
 
 // Import core Node.js modules
@@ -76,7 +74,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Middleware to set locals.isLoggedIn
+// Middleware to set login status
 app.use((req, res, next) => {
     res.locals.isLoggedIn = req.session.user ? true : false;
     next();
@@ -102,6 +100,7 @@ app.use(nocache());
 const indexRoutes = require('./routes/indexRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/usersRoutes');
+const authRoutes = require('./routes/authRoutes');
 const otpRoutes = require('./routes/otpRoutes');
 const productRoutes = require('./routes/productsRoutes');
 const orderRoutes = require('./routes/ordersRoutes');
@@ -112,6 +111,7 @@ const errorRoutes = require('./routes/errorRoutes');
 app.use('/', indexRoutes);
 app.use('/admin', adminRoutes);
 app.use('/users', userRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/otp', otpRoutes);
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
