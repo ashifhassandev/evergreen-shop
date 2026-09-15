@@ -34,6 +34,7 @@ const createError = require("http-errors");
 
 // Initialize Express app
 const app = express();
+app.set("trust proxy", 1);
 
 const setCartAndWishlistCounts = require("./middlewares/setCartWishlistCounts");
 
@@ -42,7 +43,7 @@ app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
       ttl: 1 * 24 * 60 * 60, // Session will expire in 1 hour
@@ -57,7 +58,12 @@ app.use(
 
 app.use(mongoSanitize());
 app.use(hpp());
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://evergreen-shop-demo.onrender.com",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
