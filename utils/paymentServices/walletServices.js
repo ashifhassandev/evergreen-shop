@@ -137,13 +137,21 @@ const verifyPayment = async (req, res) => {
 
         await user.save();
 
-        return successHandler(res, HttpStatus.OK, "Payment verified and wallet updated.");
+        return successHandler(
+          res,
+          HttpStatus.OK,
+          "Payment verified and wallet updated.",
+        );
       } catch (error) {
         console.error("Error updating wallet: ", error);
         throw new Error("An error occurred. Please try again later.");
       }
     } else {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Payment verification failed.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Payment verification failed.",
+      );
     }
   } catch (error) {
     console.error("Error verifying payment: ", error);
@@ -193,7 +201,9 @@ const processRefund = async (orderId, itemId = null) => {
             "wallet.transactions": {
               amount: refundAmount,
               date: new Date(),
-              description: itemId ? `Refund for item ${item.name}.` : "Order cancelled successfully.",
+              description: itemId
+                ? `Refund for item ${item.name}.`
+                : "Order cancelled successfully.",
               type: "credit",
               status: "completed",
             },

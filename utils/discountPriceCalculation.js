@@ -61,10 +61,10 @@ const calculateBestDiscountedPrice = (product) => {
     discountedPrice: bestDiscountPrice,
     discountPercentage: bestDiscountPercentage,
     fixedDiscount: bestFixedDiscount,
-    discountType: discountType
+    discountType: discountType,
   };
 };
 
 module.exports = {
-  calculateBestDiscountedPrice
+  calculateBestDiscountedPrice,
 };

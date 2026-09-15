@@ -41,16 +41,13 @@ const updateUserOrdersAndCoupons = async (userId, orderId, couponId) => {
 const updateProductStockAndPurchaseCount = async (orderItems) => {
   await Promise.all(
     orderItems.map(async (item) => {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        { 
-          $inc: {
-            stock: -item.quantity,
-            purchaseCount: item.quantity,
-          },
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: {
+          stock: -item.quantity,
+          purchaseCount: item.quantity,
         },
-      );
-    })
+      });
+    }),
   );
 };
 

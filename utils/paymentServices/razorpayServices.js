@@ -76,7 +76,9 @@ const handleRazorpayPaymentFailure = async (req, res) => {
       {
         $or: [
           { _id: order._id }, // Update the order document
-          { "orderItems._id": { $in: order.orderItems.map((item) => item._id) } }, // Update the order items
+          {
+            "orderItems._id": { $in: order.orderItems.map((item) => item._id) },
+          }, // Update the order items
         ],
       },
       {
