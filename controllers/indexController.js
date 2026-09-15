@@ -2,7 +2,9 @@ const Banner = require("../models/bannerSchema");
 const Category = require("../models/category");
 const Product = require("../models/product");
 
-const { calculateBestDiscountedPrice } = require("../utils/discountPriceCalculation");
+const {
+  calculateBestDiscountedPrice,
+} = require("../utils/discountPriceCalculation");
 
 // Fetches and renders the home page
 const getHome = async (req, res) => {

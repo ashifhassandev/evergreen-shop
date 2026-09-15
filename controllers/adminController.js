@@ -39,7 +39,8 @@ const adminLogin = async (req, res) => {
   try {
     const admin = await Admin.findOne({ email, isAdmin: true });
     if (!admin) {
-      locals.message.error = "Admin not found. Try again using another account.";
+      locals.message.error =
+        "Admin not found. Try again using another account.";
 
       return res.status(HttpStatus.NOT_FOUND).render("admin/login", {
         locals,
@@ -80,7 +81,9 @@ const getDashboard = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalProducts = await Product.countDocuments();
-    const totalOrders = await Order.countDocuments({ orderStatus: "Delivered" });
+    const totalOrders = await Order.countDocuments({
+      orderStatus: "Delivered",
+    });
 
     const totalRevenue = await Order.aggregate([
       { $match: { orderStatus: "Delivered" } },
@@ -202,12 +205,11 @@ const getCategories = async (req, res) => {
   const locals = { title: "Admin Categories | EverGreen", message: {} };
 
   try {
-    const categories = await Category.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const categories = await Category.find().sort({ createdAt: -1 }).lean();
 
     if (categories.length === 0) {
-      locals.message.error = "No categories available. Please add categories to list them.";
+      locals.message.error =
+        "No categories available. Please add categories to list them.";
     }
 
     res.render("admin/categories", {
@@ -227,22 +229,27 @@ const addCategory = async (req, res) => {
 
   try {
     if (categoryId) {
-      await Category.findByIdAndUpdate(
-        categoryId, 
-        {
-          name: categoryName,
-          status,
-          description,
-        },
-      );
+      await Category.findByIdAndUpdate(categoryId, {
+        name: categoryName,
+        status,
+        description,
+      });
 
-      return successHandler(res, HttpStatus.OK, `${categoryName} category updated successfully.`);
+      return successHandler(
+        res,
+        HttpStatus.OK,
+        `${categoryName} category updated successfully.`,
+      );
     } else {
       const existingCategory = await Category.findOne({
         name: { $regex: new RegExp(`^${categoryName}$`, "i") },
       });
       if (existingCategory) {
-        return errorHandler(res, HttpStatus.CONFLICT, `${categoryName} category already exists.`);
+        return errorHandler(
+          res,
+          HttpStatus.CONFLICT,
+          `${categoryName} category already exists.`,
+        );
       }
 
       // Create and save new category
@@ -252,7 +259,11 @@ const addCategory = async (req, res) => {
         description,
       });
 
-      return successHandler(res, HttpStatus.CREATED, `${newCategory.name} category added successfully.`);
+      return successHandler(
+        res,
+        HttpStatus.CREATED,
+        `${newCategory.name} category added successfully.`,
+      );
     }
   } catch (error) {
     console.error("Error creating category: ", error);
@@ -265,16 +276,25 @@ const toggleCategoryListing = async (req, res) => {
   const categoryId = req.params.id;
 
   try {
-    const category = await Category.findById(categoryId).select("isListed status");
+    const category =
+      await Category.findById(categoryId).select("isListed status");
     if (!category) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, `Category not found. Please try again.`);
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        `Category not found. Please try again.`,
+      );
     }
 
     category.isListed = !category.isListed;
     category.status = category.isListed ? "active" : "inactive";
     await category.save();
 
-    return successHandler(res, HttpStatus.OK, `${category.name} ${category.isListed ? "listed" : "unlisted"} successfully`);
+    return successHandler(
+      res,
+      HttpStatus.OK,
+      `${category.name} ${category.isListed ? "listed" : "unlisted"} successfully`,
+    );
   } catch (error) {
     console.error("Error toggling category listing: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -286,9 +306,7 @@ const getUsers = async (req, res) => {
   const locals = { title: "Admin - Users List | EverGreen", message: {} };
 
   try {
-    const users = await User.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const users = await User.find().sort({ createdAt: -1 }).lean();
 
     if (users.length === 0) {
       locals.message.error = "The user list is empty. Please check back later.";
@@ -383,12 +401,11 @@ const getProducts = async (req, res) => {
 
   try {
     const categories = await Category.find().lean();
-    const products = await Product.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const products = await Product.find().sort({ createdAt: -1 }).lean();
 
     if (categories.length === 0) {
-      locals.message.error = "No categories available. Please add categories to list products.";
+      locals.message.error =
+        "No categories available. Please add categories to list products.";
     }
     if (products.length === 0) {
       locals.message.error = "No products available. Please try adding some.";
@@ -413,7 +430,8 @@ const getAddProduct = async (req, res) => {
   try {
     const categories = await Category.find({ isListed: true }).lean();
     if (categories.length === 0) {
-      locals.message.error = "Error fetching categories. Please try again later.";
+      locals.message.error =
+        "Error fetching categories. Please try again later.";
     }
 
     res.render("admin/addProduct", {
@@ -535,7 +553,9 @@ const editProduct = async (req, res) => {
           fs.unlinkSync(imagePath);
         }
       });
-      product.images = product.images.filter((image) => !removeImage.includes(image));
+      product.images = product.images.filter(
+        (image) => !removeImage.includes(image),
+      );
     }
 
     // Handle new image uploads
@@ -557,11 +577,11 @@ const editProduct = async (req, res) => {
     const updatedProduct = await product.save();
 
     return res.status(HttpStatus.OK).json({
-        success: true,
-        updatedProduct,
-        message: "Product updated successfully.",
-        redirectUrl,
-      });
+      success: true,
+      updatedProduct,
+      message: "Product updated successfully.",
+      redirectUrl,
+    });
   } catch (error) {
     console.error("Error updating the product: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -670,7 +690,11 @@ const addCoupon = async (req, res) => {
       isActive: isActive ? true : false,
     });
 
-    return successHandler(res, HttpStatus.CREATED, `${newCoupon.code} added successfully`);
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      `${newCoupon.code} added successfully`,
+    );
   } catch (error) {
     console.error("Error adding the coupon: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -682,9 +706,7 @@ const getCoupons = async (req, res) => {
   const locals = { title: "Admin - Coupons | EverGreen" };
 
   try {
-    const coupons = await Coupon.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
 
     res.render("admin/coupons", {
       locals,
@@ -805,7 +827,9 @@ const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const order = await Order.findById(id).select("orderStatus paymentMethod orderPaymentStatus");
+    const order = await Order.findById(id).select(
+      "orderStatus paymentMethod orderPaymentStatus",
+    );
     if (!order) {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Order not found.");
     }
@@ -818,7 +842,11 @@ const updateOrderStatus = async (req, res) => {
 
     await order.save();
 
-    return successHandler(res, HttpStatus.OK, `Order status changed to ${orderStatus}.`);
+    return successHandler(
+      res,
+      HttpStatus.OK,
+      `Order status changed to ${orderStatus}.`,
+    );
   } catch (error) {
     console.error("Error changing order status: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -858,7 +886,9 @@ const updateItemStatus = async (req, res) => {
   const { itemStatus } = req.body;
 
   try {
-    const order = await Order.findById(orderId).populate("orderItems.productId");
+    const order = await Order.findById(orderId).populate(
+      "orderItems.productId",
+    );
     if (!order) {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Order not found.");
     }
@@ -887,9 +917,7 @@ const getBanner = async (req, res) => {
   const locals = { title: "Admin Banners | EverGreen" };
 
   try {
-    const banners = await Banner.find()
-      .sort({ createdAt: -1 })
-      .lean();
+    const banners = await Banner.find().sort({ createdAt: -1 }).lean();
 
     res.render("admin/banners", {
       locals,
@@ -919,7 +947,11 @@ const addBanner = async (req, res) => {
   try {
     const image = req.file;
     if (!image) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Image is required for upload.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Image is required for upload.",
+      );
     }
 
     const imageUrl = image.filename;
@@ -932,10 +964,10 @@ const addBanner = async (req, res) => {
     });
 
     return res.status(HttpStatus.CREATED).json({
-        success: true,
-        message: "Banner added successfully.",
-        banner: newBanner,
-      });
+      success: true,
+      message: "Banner added successfully.",
+      banner: newBanner,
+    });
   } catch (error) {
     console.error("Error adding banner: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -954,11 +986,9 @@ const updateBanner = async (req, res) => {
       updateData.imageUrl = image.filename;
     }
 
-    const updatedBanner = await Banner.findByIdAndUpdate(
-      id, 
-      updateData,
-      { new: true },
-    );
+    const updatedBanner = await Banner.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!updatedBanner) {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Banner not found.");
@@ -1050,15 +1080,25 @@ const addCategoryOffers = async (req, res) => {
     categoryToUpdate.offer = {
       type: offerType,
       fixedDiscount: fixedDiscount ? parseFloat(fixedDiscount) : 0,
-      percentageDiscount: percentageDiscount ? parseFloat(percentageDiscount) : 0,
-      minimumPurchaseAmount: minimumPurchaseAmount ? parseFloat(minimumPurchaseAmount) : 0,
+      percentageDiscount: percentageDiscount
+        ? parseFloat(percentageDiscount)
+        : 0,
+      minimumPurchaseAmount: minimumPurchaseAmount
+        ? parseFloat(minimumPurchaseAmount)
+        : 0,
       isActive: offerIsActive === "true",
-      expirationDate: offerExpirationDate ? new Date(offerExpirationDate) : null,
+      expirationDate: offerExpirationDate
+        ? new Date(offerExpirationDate)
+        : null,
     };
 
     await categoryToUpdate.save();
 
-    return successHandler(res, HttpStatus.CREATED, `${categoryToUpdate.offer.type} offer added to ${categoryToUpdate.name}.`);
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      `${categoryToUpdate.offer.type} offer added to ${categoryToUpdate.name}.`,
+    );
   } catch (error) {
     console.error("Error adding category offer: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -1077,11 +1117,10 @@ const getAddProductOffers = async (req, res) => {
   ];
 
   try {
-    const products = await Product.find({ availability: true })
-      .populate({
-        path: "category",
-        match: { isListed: true },
-      });
+    const products = await Product.find({ availability: true }).populate({
+      path: "category",
+      match: { isListed: true },
+    });
 
     const filteredProducts = products.filter((product) => product.category);
 
@@ -1122,15 +1161,25 @@ const addProductOffers = async (req, res) => {
     productToUpdate.offer = {
       type: offerType,
       fixedDiscount: fixedDiscount ? parseFloat(fixedDiscount) : 0,
-      percentageDiscount: percentageDiscount ? parseFloat(percentageDiscount) : 0,
-      minimumPurchaseAmount: minimumPurchaseAmount ? parseFloat(minimumPurchaseAmount) : 0,
+      percentageDiscount: percentageDiscount
+        ? parseFloat(percentageDiscount)
+        : 0,
+      minimumPurchaseAmount: minimumPurchaseAmount
+        ? parseFloat(minimumPurchaseAmount)
+        : 0,
       isActive: offerIsActive === "true",
-      expirationDate: offerExpirationDate ? new Date(offerExpirationDate) : null,
+      expirationDate: offerExpirationDate
+        ? new Date(offerExpirationDate)
+        : null,
     };
 
     await productToUpdate.save();
 
-    return successHandler(res, HttpStatus.CREATED, `${productToUpdate.offer.type} offer added to ${productToUpdate.name}.`);
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      `${productToUpdate.offer.type} offer added to ${productToUpdate.name}.`,
+    );
   } catch (error) {
     console.error("Error adding products offer: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -1151,7 +1200,11 @@ const getOffers = async (req, res) => {
     });
 
     if (categories.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Categories with offer not found.");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Categories with offer not found.",
+      );
     }
 
     const products = await Product.find({
@@ -1163,7 +1216,11 @@ const getOffers = async (req, res) => {
     });
 
     if (products.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Products with offer not found.");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Products with offer not found.",
+      );
     }
 
     res.render("admin/offers", {
@@ -1192,7 +1249,11 @@ const getCategoryOffers = async (req, res) => {
     });
 
     if (categories.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Categories with offer not found.");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Categories with offer not found.",
+      );
     }
 
     res.render("admin/categoryOffers", {
@@ -1220,7 +1281,11 @@ const getProductOffers = async (req, res) => {
     });
 
     if (products.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Products with offer not found.");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Products with offer not found.",
+      );
     }
 
     res.render("admin/productOffers", {
@@ -1286,7 +1351,10 @@ const updateItemReturnStatus = async (req, res) => {
       );
     }
   } catch (error) {
-    console.error("Error updating the return status of the item and processing refund: ", error);
+    console.error(
+      "Error updating the return status of the item and processing refund: ",
+      error,
+    );
     throw new Error("An error occurred. Please try again later.");
   }
 };
@@ -1294,7 +1362,8 @@ const updateItemReturnStatus = async (req, res) => {
 // Updates the exchange status of an order item
 const updateItemExchangeStatus = async (req, res) => {
   try {
-    const { orderId, orderItemId, exchangeStatus, exchangeRejectReason } = req.body;
+    const { orderId, orderItemId, exchangeStatus, exchangeRejectReason } =
+      req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -1314,7 +1383,11 @@ const updateItemExchangeStatus = async (req, res) => {
 
     await order.save();
 
-    return successHandler(res, HttpStatus.CREATED, "Exchange status updated successfully");
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      "Exchange status updated successfully",
+    );
   } catch (error) {
     console.error("Error updating the exchange status of the item: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -1324,7 +1397,8 @@ const updateItemExchangeStatus = async (req, res) => {
 // Updates the refund status of an order item
 const updateItemRefundStatus = async (req, res) => {
   try {
-    const { orderId, orderItemId, itemRefundStatus, itemRefundRejectReason } = req.body;
+    const { orderId, orderItemId, itemRefundStatus, itemRefundRejectReason } =
+      req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -1344,7 +1418,11 @@ const updateItemRefundStatus = async (req, res) => {
 
     await order.save();
 
-    return successHandler(res, HttpStatus.CREATED, "Refund status updated successfully");
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      "Refund status updated successfully",
+    );
   } catch (error) {
     console.error("Error updating the refund status of the item: ", error);
     throw new Error("An error occurred. Please try again later.");

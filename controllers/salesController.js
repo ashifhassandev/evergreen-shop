@@ -20,7 +20,10 @@ const getSalesReportPage = async (req, res) => {
 const calculateReportDetails = (orders) => {
   const totalOrders = orders.length;
   const totalAmount = orders.reduce((sum, order) => sum + order.totalPrice, 0);
-  const totalDiscount = orders.reduce((sum, order) => sum + order.couponDiscount, 0);
+  const totalDiscount = orders.reduce(
+    (sum, order) => sum + order.couponDiscount,
+    0,
+  );
 
   return { totalOrders, totalAmount, totalDiscount };
 };
@@ -80,7 +83,9 @@ const generateSalesReport = async (req, res) => {
 
 // Generate HTML content for the sales report
 const generateHTMLContent = (orders, reportDetails, fromDate, toDate) => {
-  const formattedFromDate = fromDate ? moment(fromDate).format("YYYY-MM-DD") : "N/A";
+  const formattedFromDate = fromDate
+    ? moment(fromDate).format("YYYY-MM-DD")
+    : "N/A";
   const formattedToDate = toDate ? moment(toDate).format("YYYY-MM-DD") : "N/A";
 
   // Create report header
@@ -119,9 +124,11 @@ const generateHTMLContent = (orders, reportDetails, fromDate, toDate) => {
         <tr>
             <td>${order.generatedOrderId}</td> <!-- Order ID -->
             <td>${moment(order.orderDate).format("YYYY-MM-DD HH:mm:ss")}</td> <!-- Formatted order date -->
-            <td>${order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : "N/A" }</td> <!-- User name -->
+            <td>${order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : "N/A"}</td> <!-- User name -->
             <td>${order.orderItems
-              .map((item) => `${item.productId.name} - ${item.quantity} x ${item.price} = ${item.itemTotal}`
+              .map(
+                (item) =>
+                  `${item.productId.name} - ${item.quantity} x ${item.price} = ${item.itemTotal}`,
               )
               .join(", ")}</td> <!-- Product details -->
             <td>${
@@ -132,12 +139,12 @@ const generateHTMLContent = (orders, reportDetails, fromDate, toDate) => {
             <td>${order.paymentMethod}</td> <!-- Payment method -->
             <td>${order.orderStatus}</td> <!-- Order status -->
             <td>${order.totalPrice}</td> <!-- Total amount -->
-            <td>${ order.couponId ? order.couponId.code : "" }</td> <!-- Coupon code -->
+            <td>${order.couponId ? order.couponId.code : ""}</td> <!-- Coupon code -->
             <td>${order.couponDiscount}</td> <!-- Coupon discount -->
-            <td>${ order.totalPrice - order.couponDiscount }</td> <!-- Payable amount after discount -->
+            <td>${order.totalPrice - order.couponDiscount}</td> <!-- Payable amount after discount -->
             <td>${order.categoryDiscount || 0}</td> <!-- Category discount -->
         </tr>
-    `
+    `,
     )
     .join(""); // Join rows into a single string
 
@@ -189,7 +196,9 @@ const downloadSalesReport = async (req, res) => {
 
   const reportDetails = calculateReportDetails(orders);
 
-  const formattedFromDate = fromDate ? moment(fromDate).format("YYYY-MM-DD") : "N/A";
+  const formattedFromDate = fromDate
+    ? moment(fromDate).format("YYYY-MM-DD")
+    : "N/A";
   const formattedToDate = toDate ? moment(toDate).format("YYYY-MM-DD") : "N/A";
 
   // Handle Excel format
@@ -218,9 +227,15 @@ const downloadSalesReport = async (req, res) => {
       worksheet.addRow({
         _id: order.generatedOrderId,
         orderDate: moment(order.orderDate).format("YYYY-MM-DD HH:mm:ss"),
-        user: order.userId ? `${order.userId.firstName} ${order.userId.lastName}` : "N/A",
+        user: order.userId
+          ? `${order.userId.firstName} ${order.userId.lastName}`
+          : "N/A",
         orderItems: order.orderItems
-          .map((item) => `${item.productId.name} - ${item.quantity} x ${item.price} - ₹${item.itemTotal}`).join("\n"),
+          .map(
+            (item) =>
+              `${item.productId.name} - ${item.quantity} x ${item.price} - ₹${item.itemTotal}`,
+          )
+          .join("\n"),
         shippingAddress: order.shippingAddress
           ? `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state}`
           : "N/A",
@@ -284,7 +299,7 @@ const downloadSalesReport = async (req, res) => {
       doc
         .fontSize(10)
         .text(
-          `Order Date: ${moment(order.orderDate).format("YYYY-MM-DD HH:mm:ss")}`
+          `Order Date: ${moment(order.orderDate).format("YYYY-MM-DD HH:mm:ss")}`,
         );
       doc
         .fontSize(10)
@@ -293,7 +308,7 @@ const downloadSalesReport = async (req, res) => {
             order.userId
               ? `${order.userId.firstName} ${order.userId.lastName}`
               : "N/A"
-          }`
+          }`,
         );
       doc
         .fontSize(10)
@@ -301,9 +316,9 @@ const downloadSalesReport = async (req, res) => {
           `Products: ${order.orderItems
             .map(
               (item) =>
-                `${item.productId.name} - ${item.quantity} x ${item.price} - ${item.itemTotal}`
+                `${item.productId.name} - ${item.quantity} x ${item.price} - ${item.itemTotal}`,
             )
-            .join(", ")}`
+            .join(", ")}`,
         );
       doc
         .fontSize(10)
@@ -312,7 +327,7 @@ const downloadSalesReport = async (req, res) => {
             order.shippingAddress
               ? `${order.shippingAddress.address}, ${order.shippingAddress.city}, ${order.shippingAddress.state}`
               : "N/A"
-          }`
+          }`,
         );
       doc.fontSize(10).text(`Payment Method: ${order.paymentMethod}`);
       doc.fontSize(10).text(`Status: ${order.orderStatus}`);
@@ -329,8 +344,7 @@ const downloadSalesReport = async (req, res) => {
     });
 
     doc.end();
-  }
-  else {
+  } else {
     res.status(400).send("Invalid format.");
   }
 };

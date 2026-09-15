@@ -6,7 +6,9 @@ const Product = require("../models/product");
 const User = require("../models/user");
 const Wishlist = require("../models/wishlistSchema");
 
-const { calculateBestDiscountedPrice } = require("../utils/discountPriceCalculation");
+const {
+  calculateBestDiscountedPrice,
+} = require("../utils/discountPriceCalculation");
 const {
   creditReferralReward,
   generateUniqueReferralCode,
@@ -65,7 +67,11 @@ const userSignup = async (req, res) => {
       await creditReferralReward(referrer._id, newUser);
     }
 
-    return successHandler(res, HttpStatus.CREATED, "You have registered successfully.");
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      "You have registered successfully.",
+    );
   } catch (error) {
     console.error("Error registering the user: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -103,7 +109,8 @@ const userLogin = async (req, res, next) => {
     }
 
     if (user.status === false) {
-      locals.message.error = "You are blocked by the Admin. Try using another account.";
+      locals.message.error =
+        "You are blocked by the Admin. Try using another account.";
 
       return res.status(HttpStatus.BAD_REQUEST).render("users/login", {
         locals,
@@ -169,13 +176,13 @@ const getUserProfile = async (req, res) => {
   const userId = req.session.user._id;
 
   try {
-    const user = await User.findById(userId)
-      .populate("addresses")
-      .lean();
+    const user = await User.findById(userId).populate("addresses").lean();
 
     if (!user) {
       const errorMessage = "User not found. Try again using another account.";
-      return res.redirect(`/error?statusCode=404&errorMessage=${encodeURIComponent(errorMessage)}`);
+      return res.redirect(
+        `/error?statusCode=404&errorMessage=${encodeURIComponent(errorMessage)}`,
+      );
     }
 
     locals.user = user;
@@ -211,10 +218,7 @@ const editProfile = async (req, res) => {
   const { firstName, lastName } = req.body;
 
   try {
-    await User.findByIdAndUpdate(
-      userId,
-      { firstName, lastName },
-    );
+    await User.findByIdAndUpdate(userId, { firstName, lastName });
 
     req.session.user.firstName = firstName;
     req.session.user.lastName = lastName;
@@ -237,9 +241,7 @@ const getAddressManagement = async (req, res) => {
 
   try {
     const userId = req.session.user._id;
-    const user = await User.findById(userId)
-      .populate("addresses")
-      .lean();
+    const user = await User.findById(userId).populate("addresses").lean();
 
     locals.addresses = user.addresses;
 
@@ -275,7 +277,11 @@ const addAddress = async (req, res) => {
         return errorHandler(res, HttpStatus.NOT_FOUND, "Address not found.");
       }
 
-      return successHandler(res, HttpStatus.OK, "Address updated successfully.");
+      return successHandler(
+        res,
+        HttpStatus.OK,
+        "Address updated successfully.",
+      );
     } else {
       // Create and save new address
       const newAddress = await Address.create({
@@ -341,7 +347,7 @@ const getShoppingCart = async (req, res) => {
       populate: {
         path: "category",
         model: "Category",
-      }
+      },
     });
 
     if (!cart) {
@@ -397,7 +403,11 @@ const addProduct = async (req, res) => {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found.");
     }
     if (product.stock === 0) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Product is out of stock.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Product is out of stock.",
+      );
     }
 
     const { discountedPrice } = calculateBestDiscountedPrice(product);
@@ -416,16 +426,28 @@ const addProduct = async (req, res) => {
       await user.save();
     }
 
-    const existingItem = cart.items.find((item) => item.productId.equals(productId));
+    const existingItem = cart.items.find((item) =>
+      item.productId.equals(productId),
+    );
     if (existingItem) {
       if (existingItem.quantity + 0.5 > product.stock) {
-        return errorHandler(res, HttpStatus.BAD_REQUEST, "Not enough stock available.");
+        return errorHandler(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Not enough stock available.",
+        );
       }
       existingItem.quantity += 0.5;
-      existingItem.itemTotal = discountedPrice ? discountedPrice * existingItem.quantity : existingItem.price * existingItem.quantity;
+      existingItem.itemTotal = discountedPrice
+        ? discountedPrice * existingItem.quantity
+        : existingItem.price * existingItem.quantity;
     } else {
       if (1 > product.stock) {
-        return errorHandler(res, HttpStatus.BAD_REQUEST, "Not enough stock available.");
+        return errorHandler(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Not enough stock available.",
+        );
       }
 
       cart.items.push({
@@ -472,12 +494,19 @@ const updateCartQuantity = async (req, res) => {
         const { discountedPrice } = calculateBestDiscountedPrice(product);
 
         if (quantity > product.stock) {
-          return errorHandler(res, HttpStatus.BAD_REQUEST, "Not enough stock available.");
+          return errorHandler(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Not enough stock available.",
+          );
         }
 
         item.quantity = quantity;
         item.itemTotal = discountedPrice * quantity;
-        cart.subTotal = cart.items.reduce((acc, item) => acc + item.itemTotal, 0);
+        cart.subTotal = cart.items.reduce(
+          (acc, item) => acc + item.itemTotal,
+          0,
+        );
         cart.totalPrice = cart.subTotal + cart.shippingCharge;
 
         await cart.save();
@@ -517,9 +546,15 @@ const deleteCartItems = async (req, res) => {
         return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found.");
       }
 
-      const itemIndex = cart.items.findIndex((item) => item.productId.equals(productId));
+      const itemIndex = cart.items.findIndex((item) =>
+        item.productId.equals(productId),
+      );
       if (itemIndex === -1) {
-        return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found in cart.");
+        return errorHandler(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Product not found in cart.",
+        );
       }
 
       cart.items.splice(itemIndex, 1);
@@ -553,7 +588,9 @@ const getWishlist = async (req, res) => {
     const userId = req.session.user._id;
     const user = await User.findById(userId);
 
-    let wishlist = await Wishlist.findOne({ userId }).populate("items.productId");
+    let wishlist = await Wishlist.findOne({ userId }).populate(
+      "items.productId",
+    );
     if (!wishlist) {
       wishlist = await Wishlist.create({
         userId,
@@ -562,7 +599,10 @@ const getWishlist = async (req, res) => {
     }
 
     // Only set the wishlist reference if it was newly created
-    if (!user.wishlist || user.wishlist.toString() !== wishlist._id.toString()) {
+    if (
+      !user.wishlist ||
+      user.wishlist.toString() !== wishlist._id.toString()
+    ) {
       user.wishlist = wishlist._id;
       await user.save();
     }
@@ -571,7 +611,10 @@ const getWishlist = async (req, res) => {
     const limit = 5;
     const totalItems = wishlist.items.length;
     const totalPages = Math.ceil(totalItems / limit);
-    const paginatedItems = wishlist.items.slice((page - 1) * limit, page * limit);
+    const paginatedItems = wishlist.items.slice(
+      (page - 1) * limit,
+      page * limit,
+    );
 
     res.render("users/wishlist", {
       locals,
@@ -613,15 +656,25 @@ const addToWishlist = async (req, res) => {
       await user.save();
     }
 
-    const existingItem = wishlist.items.find((item) => item.productId.equals(productId));
+    const existingItem = wishlist.items.find((item) =>
+      item.productId.equals(productId),
+    );
     if (existingItem) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Product already exists in your wishlist.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Product already exists in your wishlist.",
+      );
     }
 
     wishlist.items.push({ productId });
     await wishlist.save();
 
-    return successHandler(res, HttpStatus.OK, `Product added to your wishlist.`);
+    return successHandler(
+      res,
+      HttpStatus.OK,
+      `Product added to your wishlist.`,
+    );
   } catch (error) {
     console.error("Error adding product to wishlist: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -639,22 +692,34 @@ const deleteWishlistItems = async (req, res) => {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Wishlist not found.");
     }
 
-    const item = wishlist.items.find((item) => item.productId.equals(productId));
+    const item = wishlist.items.find((item) =>
+      item.productId.equals(productId),
+    );
     if (item) {
       const product = await Product.findById(productId);
       if (!product) {
         return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found.");
       }
 
-      const itemIndex = wishlist.items.findIndex((item) => item.productId.equals(productId));
+      const itemIndex = wishlist.items.findIndex((item) =>
+        item.productId.equals(productId),
+      );
       if (itemIndex === -1) {
-        return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found in wishlist.");
+        return errorHandler(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Product not found in wishlist.",
+        );
       }
 
       wishlist.items.splice(itemIndex, 1);
       await wishlist.save();
 
-      return successHandler(res, HttpStatus.OK, `${product.name} is removed from the wishlist.`);
+      return successHandler(
+        res,
+        HttpStatus.OK,
+        `${product.name} is removed from the wishlist.`,
+      );
     }
   } catch (error) {
     console.error("Error deleting wishlist item: ", error);
@@ -699,7 +764,7 @@ const userLogout = (req, res) => {
       console.error("Error destroying the session: ", error);
       throw new Error("An error occurred. Please try again later.");
     }
-    
+
     return res.redirect("/users/login");
   });
 };

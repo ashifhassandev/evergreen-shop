@@ -9,14 +9,19 @@ const Coupon = require("../models/couponSchema");
 const Order = require("../models/orderSchema");
 const User = require("../models/user");
 
-const { calculateBestDiscountedPrice } = require("../utils/discountPriceCalculation");
+const {
+  calculateBestDiscountedPrice,
+} = require("../utils/discountPriceCalculation");
 const {
   confirmRazorpayPayment,
   createRazorpayOrder,
   handleRazorpayPaymentFailure,
   verifyRazorpayPaymentSignature,
 } = require("../utils/paymentServices/razorpayServices");
-const { finalizeOrder, generateOrderId } = require("../utils/orderUpdationUtils");
+const {
+  finalizeOrder,
+  generateOrderId,
+} = require("../utils/orderUpdationUtils");
 const HttpStatus = require("../utils/httpStatus");
 const errorHandler = require("../utils/errorHandlerUtils");
 const { processRefund } = require("../utils/paymentServices/walletServices");
@@ -41,7 +46,11 @@ const getCheckout = async (req, res) => {
 
     const cart = user.cart;
     if (!cart || !cart.subTotal) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Cart is empty or not found.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Cart is empty or not found.",
+      );
     }
 
     // Retrieve coupon details from session
@@ -79,17 +88,29 @@ const applyCoupon = async (req, res) => {
   try {
     const coupon = await Coupon.findOne({ code: couponCode });
     if (!coupon) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid Coupon! Please try again or use another coupon.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid Coupon! Please try again or use another coupon.",
+      );
     }
 
     const user = await User.findById(userId).populate("cart");
     const cart = user.cart;
     if (!user || !user.cart || user.cart.items.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Cart is empty or not found.");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Cart is empty or not found.",
+      );
     }
 
     if (user.usedCoupons.includes(coupon._id)) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "You have already used this coupon.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "You have already used this coupon.",
+      );
     }
 
     const currentDate = new Date();
@@ -97,7 +118,10 @@ const applyCoupon = async (req, res) => {
       return errorHandler(res, HttpStatus.BAD_REQUEST, "Coupon has expired.");
     }
 
-    if (coupon.minimumPurchaseAmount && cart.subTotal < coupon.minimumPurchaseAmount) {
+    if (
+      coupon.minimumPurchaseAmount &&
+      cart.subTotal < coupon.minimumPurchaseAmount
+    ) {
       return errorHandler(
         res,
         HttpStatus.BAD_REQUEST,
@@ -105,7 +129,8 @@ const applyCoupon = async (req, res) => {
       );
     }
 
-    const couponDiscount = coupon.discountType === "PERCENTAGE"
+    const couponDiscount =
+      coupon.discountType === "PERCENTAGE"
         ? cart.subTotal * (coupon.discountValue / 100)
         : coupon.discountValue;
 
@@ -143,11 +168,19 @@ const removeCoupon = async (req, res) => {
     const user = await User.findById(userId).populate("cart");
     const cart = user.cart;
     if (!user || !user.cart || user.cart.items.length === 0) {
-      return errorHandler(res, HttpStatus.NOT_FOUND, "Cart is empty or not found");
+      return errorHandler(
+        res,
+        HttpStatus.NOT_FOUND,
+        "Cart is empty or not found",
+      );
     }
 
     if (!req.session.coupon) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "No coupon applied to remove.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "No coupon applied to remove.",
+      );
     }
 
     const subtotal = cart.subTotal;
@@ -172,17 +205,17 @@ const createOrder = async (req, res) => {
   const userId = req.session.user._id;
 
   try {
-    const { paymentMethod, totalPrice, couponId, termsConditions, addressId } = req.body;
+    const { paymentMethod, totalPrice, couponId, termsConditions, addressId } =
+      req.body;
 
-    const cart = await Cart.findOne({ userId })
-      .populate({
-        path: "items.productId",
-        select: "price offer category",
-          populate: {
-            path: "category",
-            select: "offer",
-          }
-      });
+    const cart = await Cart.findOne({ userId }).populate({
+      path: "items.productId",
+      select: "price offer category",
+      populate: {
+        path: "category",
+        select: "offer",
+      },
+    });
 
     if (!cart || cart.items.length === 0) {
       return errorHandler(res, HttpStatus.BAD_REQUEST, "Your cart is empty.");
@@ -190,7 +223,11 @@ const createOrder = async (req, res) => {
 
     const shippingAddress = await Address.findById(addressId);
     if (!shippingAddress) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid shipping address.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid shipping address.",
+      );
     }
 
     let appliedCouponDiscount = 0;
@@ -200,7 +237,8 @@ const createOrder = async (req, res) => {
         return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid coupon.");
       }
 
-      appliedCouponDiscount = coupon.discountType === "PERCENTAGE"
+      appliedCouponDiscount =
+        coupon.discountType === "PERCENTAGE"
           ? cart.subTotal * (coupon.discountValue / 100)
           : coupon.discountValue;
     }
@@ -245,7 +283,7 @@ const createOrder = async (req, res) => {
           return errorHandler(
             res,
             HttpStatus.BAD_REQUEST,
-            "Orders above Rs.1000 are not eligible for COD. Please choose another method."
+            "Orders above Rs.1000 are not eligible for COD. Please choose another method.",
           );
         }
 
@@ -254,15 +292,22 @@ const createOrder = async (req, res) => {
 
         return res.status(HttpStatus.OK).json({
           success: true,
-          message: "Order placed Successfully. Please make sure the amount is available when the order is out for delivery.",
+          message:
+            "Order placed Successfully. Please make sure the amount is available when the order is out for delivery.",
           orderId: newOrder._id,
         });
 
       case "Wallet":
-        const walletUser = await User.findById(userId).populate("wallet.transactions");
+        const walletUser = await User.findById(userId).populate(
+          "wallet.transactions",
+        );
         const wallet = walletUser.wallet;
         if (!wallet || wallet.balance < newOrder.totalPrice) {
-          return errorHandler(res, HttpStatus.BAD_REQUEST, "Insufficient balance in wallet.");
+          return errorHandler(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Insufficient balance in wallet.",
+          );
         }
 
         wallet.balance -= newOrder.totalPrice;
@@ -297,7 +342,11 @@ const createOrder = async (req, res) => {
           receipt: `order_rcptid_${userId}`,
         });
         if (!razorpayOrder) {
-          return errorHandler(res, HttpStatus.BAD_REQUEST, "Failed to create Razorpay order.");
+          return errorHandler(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Failed to create Razorpay order.",
+          );
         }
 
         newOrder.razorpayOrderId = razorpayOrder.id;
@@ -314,7 +363,11 @@ const createOrder = async (req, res) => {
         });
 
       default:
-        return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid payment method.");
+        return errorHandler(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Invalid payment method.",
+        );
     }
   } catch (error) {
     console.error("Order creation failed: ", error);
@@ -337,7 +390,11 @@ const verifyRazorpayPayment = async (req, res) => {
     razorpay_signature,
   );
   if (!isValidSignature) {
-    return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid payment signature.");
+    return errorHandler(
+      res,
+      HttpStatus.BAD_REQUEST,
+      "Invalid payment signature.",
+    );
   }
 
   try {
@@ -357,7 +414,7 @@ const verifyRazorpayPayment = async (req, res) => {
         order,
       });
     } else {
-      return handleRazorpayPaymentFailure(req, res, );
+      return handleRazorpayPaymentFailure(req, res);
     }
   } catch (error) {
     console.error("Payment confirmation failed: ", error);
@@ -374,9 +431,16 @@ const retryPayment = async (req, res) => {
     if (!order) {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Order not found.");
     }
-    if (order.orderPaymentStatus !== "Failed" && order.orderPaymentStatus !== "Pending") {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Payment already completed.");
-    }    
+    if (
+      order.orderPaymentStatus !== "Failed" &&
+      order.orderPaymentStatus !== "Pending"
+    ) {
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Payment already completed.",
+      );
+    }
 
     return res.status(HttpStatus.OK).json({
       success: true,
@@ -499,7 +563,11 @@ const getOrderDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     if (!ObjectId.isValid(orderId)) {
-      return errorHandler(res, HttpStatus.BAD_REQUEST, "Invalid Order ID format.");
+      return errorHandler(
+        res,
+        HttpStatus.BAD_REQUEST,
+        "Invalid Order ID format.",
+      );
     }
 
     const order = await Order.findById(orderId)
@@ -513,9 +581,15 @@ const getOrderDetails = async (req, res) => {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Order not found.");
     }
 
-    const hasNonReturnableItem = order.orderItems.some((item) => nonReturnableStatuses.includes(item.itemStatus));
-    const hasNonCancellableItem = order.orderItems.some((item) => nonCancellableStatuses.includes(item.itemStatus));
-    const isOrderNonCancellable = nonCancellableStatuses.includes(order.orderStatus);
+    const hasNonReturnableItem = order.orderItems.some((item) =>
+      nonReturnableStatuses.includes(item.itemStatus),
+    );
+    const hasNonCancellableItem = order.orderItems.some((item) =>
+      nonCancellableStatuses.includes(item.itemStatus),
+    );
+    const isOrderNonCancellable = nonCancellableStatuses.includes(
+      order.orderStatus,
+    );
     const showCancelButton = !hasNonCancellableItem && !isOrderNonCancellable;
 
     locals.hasNonReturnableItem = hasNonReturnableItem;
@@ -558,7 +632,7 @@ const cancelOrder = async (req, res) => {
     }
 
     order.orderStatus = "Cancelled";
-    order.orderItems.forEach((item) => item.itemStatus = "Cancelled");
+    order.orderItems.forEach((item) => (item.itemStatus = "Cancelled"));
 
     const refundResult = await processRefund(orderId);
     if (!refundResult.success) {
@@ -610,7 +684,9 @@ const returnItem = async (req, res) => {
 
     await order.save();
 
-    return res.redirect(`/orders/my-orders/order-details/${order._id}?returnRequestSuccess=true`);
+    return res.redirect(
+      `/orders/my-orders/order-details/${order._id}?returnRequestSuccess=true`,
+    );
   } catch (error) {
     console.error("Error occurred while requesting for return: ", error);
     throw new Error("An error occurred. Please try again later.");

@@ -1,10 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const Category = require("../models/category");
 const Order = require("../models/orderSchema");
 const Product = require("../models/product");
 
-const { calculateBestDiscountedPrice } = require("../utils/discountPriceCalculation");
+const {
+  calculateBestDiscountedPrice,
+} = require("../utils/discountPriceCalculation");
 const errorHandler = require("../utils/errorHandlerUtils");
 const successHandler = require("../utils/successHandlerUtils");
 const HttpStatus = require("../utils/httpStatus");
@@ -23,7 +25,9 @@ const getProducts = async (req, res) => {
   const limit = parseInt(req.query.limit || 10);
 
   try {
-    const categories = await Category.find({ isListed: true }).populate("offer");
+    const categories = await Category.find({ isListed: true }).populate(
+      "offer",
+    );
     const listedCategoryIds = categories.map((category) => category._id);
 
     let filter = {
@@ -87,12 +91,12 @@ const getProducts = async (req, res) => {
         break;
       default:
         sortOption = {};
-    }    
+    }
 
     if (products.length === 0) {
       products = await Product.find(filter)
         .populate({
-          path: "category", 
+          path: "category",
           populate: { path: "offer" },
         })
         .populate("offer")
@@ -135,7 +139,10 @@ const getProducts = async (req, res) => {
       layout: "layouts/userLayout",
     });
   } catch (error) {
-    console.error("An error occurred while fetching the products page: ", error);
+    console.error(
+      "An error occurred while fetching the products page: ",
+      error,
+    );
     throw new Error("An error occurred. Please try again later.");
   }
 };
@@ -154,28 +161,29 @@ const getProductDetails = async (req, res) => {
   try {
     const productId = req.params.id;
     if (!isValidObjectId(productId)) {
-      return res.status(HttpStatus.BAD_REQUEST).render('notFoundError', {
-          message: 'Invalid product ID.',
-          layout: 'layouts/errorMessagesLayout',
+      return res.status(HttpStatus.BAD_REQUEST).render("notFoundError", {
+        message: "Invalid product ID.",
+        layout: "layouts/errorMessagesLayout",
       });
     }
 
     const product = await Product.findById(productId)
       .populate({
-        path: "category", 
+        path: "category",
         populate: { path: "offer" },
       })
       .populate("ratings.userId")
       .lean();
 
     if (!product) {
-      return res.status(404).render('notFoundError', {
-        message: 'Product not found.',
-        layout: 'layouts/errorMessagesLayout',
+      return res.status(404).render("notFoundError", {
+        message: "Product not found.",
+        layout: "layouts/errorMessagesLayout",
       });
     }
 
-    const { discountedPrice, discountPercentage, fixedDiscount, discountType } = calculateBestDiscountedPrice(product);
+    const { discountedPrice, discountPercentage, fixedDiscount, discountType } =
+      calculateBestDiscountedPrice(product);
     const mainProduct = {
       ...product,
       discountedPrice,
@@ -185,7 +193,8 @@ const getProductDetails = async (req, res) => {
     };
 
     const averageRating = product.ratings.length
-      ? product.ratings.reduce((sum, rating) => sum + rating.rating, 0) / product.ratings.length
+      ? product.ratings.reduce((sum, rating) => sum + rating.rating, 0) /
+        product.ratings.length
       : 0;
     const hasRatings = product.ratings.length > 0;
     const relatedCategory = product.category._id;
@@ -193,8 +202,8 @@ const getProductDetails = async (req, res) => {
     let relatedProducts = await Product.find({ category: relatedCategory })
       .limit(5)
       .populate({
-        path: "category", 
-        populate: { path: "offer" }
+        path: "category",
+        populate: { path: "offer" },
       })
       .lean();
 
@@ -224,7 +233,7 @@ const getProductDetails = async (req, res) => {
       layout: "layouts/userLayout",
     });
   } catch (error) {
-    console.error('Error fetching product details: ', error);
+    console.error("Error fetching product details: ", error);
     throw new Error("An error occurred. Please try again later.");
   }
 };
@@ -246,13 +255,15 @@ const isUserEligibleForReview = async (userId, productId) => {
         select: "name images",
       })
       .select("_id orderItems.productId")
-      .lean();    
+      .lean();
 
     if (!order) {
       return { eligible: false, productName: null, productImage: null };
     } else {
-      const productItem = order.orderItems.find(item => item.productId._id.equals(productId));
-    
+      const productItem = order.orderItems.find((item) =>
+        item.productId._id.equals(productId),
+      );
+
       if (productItem) {
         return {
           eligible: true,
@@ -260,7 +271,7 @@ const isUserEligibleForReview = async (userId, productId) => {
           productImage: productItem.productId.images?.[0] || null,
         };
       }
-    }      
+    }
   } catch (error) {
     console.error("An error occurred checking review eligibility: ", error);
     throw new Error("An error occurred. Please try again later.");
@@ -279,10 +290,15 @@ const getRateProduct = async (req, res) => {
   const productId = req.params.id;
 
   try {
-    const { eligible, productName, productImage } = await isUserEligibleForReview(userId, productId);
+    const { eligible, productName, productImage } =
+      await isUserEligibleForReview(userId, productId);
 
     if (!eligible) {
-      return errorHandler(res, HttpStatus.FORBIDDEN, "You are not eligible to review this product.");
+      return errorHandler(
+        res,
+        HttpStatus.FORBIDDEN,
+        "You are not eligible to review this product.",
+      );
     }
 
     res.render("users/products/rateProduct", {
@@ -310,7 +326,9 @@ const rateProduct = async (req, res) => {
       return errorHandler(res, HttpStatus.NOT_FOUND, "Product not found");
     }
 
-    const existingRating = product.ratings.find((rating) => rating.userId.toString() === userId);
+    const existingRating = product.ratings.find(
+      (rating) => rating.userId.toString() === userId,
+    );
     if (existingRating) {
       existingRating.rating = rating;
       existingRating.review = comment;
@@ -324,7 +342,11 @@ const rateProduct = async (req, res) => {
 
     await product.save();
 
-    return successHandler(res, HttpStatus.CREATED, "Review submitted successfully.");
+    return successHandler(
+      res,
+      HttpStatus.CREATED,
+      "Review submitted successfully.",
+    );
   } catch (error) {
     console.error("Error submitting the review: ", error);
     throw new Error("An error occurred. Please try again later.");
