@@ -1,57 +1,59 @@
 // Import environment configuration
-require('dotenv').config();
+require("dotenv").config();
 
 // Import custom modules
-const connectDB = require('./config/db');
+const connectDB = require("./config/db");
 connectDB();
 
 // Import core Node.js modules
-const path = require('path');
+const path = require("path");
 
 // Import third-party modules
-const express = require('express');
+const express = require("express");
 
 // Security-related modules
-const mongoSanitize = require('express-mongo-sanitize');
-const hpp = require('hpp');
-const cors = require('cors');
-const csrf = require('csurf');
-const nocache = require('nocache');
+const mongoSanitize = require("express-mongo-sanitize");
+const hpp = require("hpp");
+const cors = require("cors");
+const csrf = require("csurf");
+const nocache = require("nocache");
 
 // Parsing and session management modules
-const MongoStore = require('connect-mongo');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const flash = require('connect-flash');
+const MongoStore = require("connect-mongo");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const flash = require("connect-flash");
 
 // Templating and layout modules
-const expressLayouts = require('express-ejs-layouts');
+const expressLayouts = require("express-ejs-layouts");
 
 // Authentication and logging modules
-const passport = require('./config/passport');
-const morgan = require('morgan');
-const createError = require('http-errors');
+const passport = require("./config/passport");
+const morgan = require("morgan");
+const createError = require("http-errors");
 
 // Initialize Express app
 const app = express();
 
-const setCartAndWishlistCounts = require('./middlewares/setCartWishlistCounts');
+const setCartAndWishlistCounts = require("./middlewares/setCartWishlistCounts");
 
 // Middleware configuration
-app.use(session({
+app.use(
+  session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
-        ttl: 1 * 24 * 60 * 60, // Session will expire in 1 hour
+      mongoUrl: process.env.MONGO_URI,
+      ttl: 1 * 24 * 60 * 60, // Session will expire in 1 hour
     }),
     cookie: {
-        httpOnly: true,
-        maxAge: 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production',
-    }
-}));
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+    },
+  }),
+);
 
 app.use(mongoSanitize());
 app.use(hpp());
@@ -67,28 +69,28 @@ const csrfProtection = csrf({ cookie: true });
 app.use(csrfProtection);
 
 app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
-    res.locals.success_msg = req.flash('success_msg');
-    res.locals.error_msg = req.flash('error_msg');
-    res.locals.error = req.flash('error');
-    next();
+  res.locals.csrfToken = req.csrfToken();
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  res.locals.error = req.flash("error");
+  next();
 });
 
 // Middleware to set login status
 app.use((req, res, next) => {
-    res.locals.isLoggedIn = req.session.user ? true : false;
-    next();
+  res.locals.isLoggedIn = req.session.user ? true : false;
+  next();
 });
 
-app.use(['/' ,'/users', '/products', '/orders'], setCartAndWishlistCounts);
+app.use(["/", "/users", "/products", "/orders"], setCartAndWishlistCounts);
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
 app.use(expressLayouts);
 
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -97,50 +99,50 @@ app.use(passport.session());
 app.use(nocache());
 
 // Import routes
-const indexRoutes = require('./routes/indexRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const userRoutes = require('./routes/usersRoutes');
-const authRoutes = require('./routes/authRoutes');
-const otpRoutes = require('./routes/otpRoutes');
-const productRoutes = require('./routes/productsRoutes');
-const orderRoutes = require('./routes/ordersRoutes');
-const salesRoutes = require('./routes/salesRoutes');
-const errorRoutes = require('./routes/errorRoutes');
+const indexRoutes = require("./routes/indexRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const userRoutes = require("./routes/usersRoutes");
+const authRoutes = require("./routes/authRoutes");
+const otpRoutes = require("./routes/otpRoutes");
+const productRoutes = require("./routes/productsRoutes");
+const orderRoutes = require("./routes/ordersRoutes");
+const salesRoutes = require("./routes/salesRoutes");
+const errorRoutes = require("./routes/errorRoutes");
 
 // Use routes
-app.use('/', indexRoutes);
-app.use('/admin', adminRoutes);
-app.use('/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/otp', otpRoutes);
-app.use('/products', productRoutes);
-app.use('/orders', orderRoutes);
-app.use('/sales', salesRoutes);
-app.use('/error', errorRoutes);
+app.use("/", indexRoutes);
+app.use("/admin", adminRoutes);
+app.use("/users", userRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/otp", otpRoutes);
+app.use("/products", productRoutes);
+app.use("/orders", orderRoutes);
+app.use("/sales", salesRoutes);
+app.use("/error", errorRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {
-    res.status(404).render('notFoundError', {
-        title: '404 - Not Found',
-        message: undefined,
-        layout: 'layouts/errorMessagesLayout',
-    });
+  res.status(404).render("notFoundError", {
+    title: "404 - Not Found",
+    message: undefined,
+    layout: "layouts/errorMessagesLayout",
+  });
 });
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).render('internalError', {
-        title: '500 - Internal Server Error',
-        layout: 'layouts/errorMessagesLayout',
-        errorMessage: "An unexpected error occurred. Please try again later.",
-    });
+  console.error(err.stack);
+  res.status(err.status || 500).render("internalError", {
+    title: "500 - Internal Server Error",
+    layout: "layouts/errorMessagesLayout",
+    errorMessage: "An unexpected error occurred. Please try again later.",
+  });
 });
 
 // Start the server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
 
 module.exports = app;
