@@ -86,5 +86,5 @@ module.exports = {
   loginValidationRules,
   otpEmailValidationRules,
   otpValidationRules,
-  resetPasswordValidationRules
+  resetPasswordValidationRules,
 };

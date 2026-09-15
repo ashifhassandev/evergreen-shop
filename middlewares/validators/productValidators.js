@@ -5,7 +5,9 @@ const productValidationRules = (isEdit = false) => [
     .notEmpty()
     .withMessage("Product name is required")
     .matches(/^[a-zA-Z\s]+$/)
-    .withMessage("Product name must be a valid name and cannot contain numbers"),
+    .withMessage(
+      "Product name must be a valid name and cannot contain numbers",
+    ),
   body("price")
     .isFloat({ gt: 0 })
     .withMessage("Price must be a positive number"),
@@ -46,5 +48,5 @@ const productValidationRules = (isEdit = false) => [
 ];
 
 module.exports = {
-  productValidationRules
+  productValidationRules,
 };

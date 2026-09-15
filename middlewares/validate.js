@@ -6,12 +6,11 @@ const validate = (req, res, next) => {
     const errorMessages = errors.array().map((error) => error.msg);
     console.error("Validation errors:", errorMessages);
     req.flash("error_msg", errorMessages.join(" "));
-    return res
-      .json({
-        success: false,
-        errors: errorMessages,
-        originalUrl: req.originalUrl
-      });
+    return res.json({
+      success: false,
+      errors: errorMessages,
+      originalUrl: req.originalUrl,
+    });
   }
 
   next();

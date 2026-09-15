@@ -4,5 +4,5 @@ const checkLoginStatus = (req, res, next) => {
 };
 
 module.exports = {
-  checkLoginStatus
+  checkLoginStatus,
 };

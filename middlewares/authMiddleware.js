@@ -8,8 +8,8 @@ const isUser = async (req, res, next) => {
         "You need to log in to access this page. Please log in or return to the homepage.";
       return res.redirect(
         `/error/user-error?statusCode=401&errorMessage=${encodeURIComponent(
-          errorMessage
-        )}`
+          errorMessage,
+        )}`,
       );
     }
 
@@ -18,8 +18,8 @@ const isUser = async (req, res, next) => {
         "Access denied. This page is only for regular users. Please log in with valid user credentials or return to the homepage.";
       return res.redirect(
         `/error/user-error?statusCode=401&errorMessage=${encodeURIComponent(
-          errorMessage
-        )}`
+          errorMessage,
+        )}`,
       );
     }
 
@@ -29,8 +29,8 @@ const isUser = async (req, res, next) => {
         "User not found. Try again using another account or return to the homepage.";
       return res.redirect(
         `/error/user-error?statusCode=401&errorMessage=${encodeURIComponent(
-          errorMessage
-        )}`
+          errorMessage,
+        )}`,
       );
     }
 
@@ -40,15 +40,15 @@ const isUser = async (req, res, next) => {
         "You are blocked by the Admin. Try again using another account or return to the homepage.";
       return res.redirect(
         `/error/user-error?statusCode=401&errorMessage=${encodeURIComponent(
-          errorMessage
-        )}`
+          errorMessage,
+        )}`,
       );
     }
 
     next();
   } catch (error) {
     console.error("An error occurred while checking authentication: ", error);
-    throw new Error("An error occurred. Please try again later.")
+    throw new Error("An error occurred. Please try again later.");
   }
 };
 
@@ -61,8 +61,8 @@ const isLoggedIn = (req, res, next) => {
       "You must be logged in to access this page. Try again after login or return to the homepage.";
     return res.redirect(
       `/error/user-error?statusCode=401&errorMessage=${encodeURIComponent(
-        errorMessage
-      )}`
+        errorMessage,
+      )}`,
     );
   }
 };
@@ -74,8 +74,8 @@ const isAdmin = async (req, res, next) => {
       "You must be logged in to access this page. Return back to login page.";
     return res.redirect(
       `/error/admin-error?statusCode=401&errorMessage=${encodeURIComponent(
-        errorMessage
-      )}`
+        errorMessage,
+      )}`,
     );
   }
 
@@ -84,8 +84,8 @@ const isAdmin = async (req, res, next) => {
     const errorMessage = "Access denied. Admin privileges required.";
     return res.redirect(
       `/error/admin-error?statusCode=401&errorMessage=${encodeURIComponent(
-        errorMessage
-      )}`
+        errorMessage,
+      )}`,
     );
   }
 
@@ -101,8 +101,8 @@ const isAdminLoggedIn = (req, res, next) => {
       "You must be logged in to access this page. Return back to login page.";
     return res.redirect(
       `/error/admin-error?statusCode=401&errorMessage=${encodeURIComponent(
-        errorMessage
-      )}`
+        errorMessage,
+      )}`,
     );
   }
 };
@@ -111,5 +111,5 @@ module.exports = {
   isUser,
   isLoggedIn,
   isAdmin,
-  isAdminLoggedIn
+  isAdminLoggedIn,
 };
